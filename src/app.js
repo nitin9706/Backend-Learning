@@ -23,6 +23,6 @@ import userRouter from "./routes/user.route.js";
 
 app.use("/api/v1/users", userRouter);
 
-// http://localhost:3000/api/v1/users
+// http://localhost:8000/api/v1/users
 
 export { app };
