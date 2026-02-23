@@ -5,7 +5,7 @@ import {
   registerUser,
 } from "../controllers/user.controller.js";
 import { upload } from "../Middlewares/Multer.middleware.js";
-import verifyJWT from "../Middlewares/auth.middleware.js";
+import { verifyJWT } from "../Middlewares/auth.middleware.js";
 const router = Router();
 
 router.route("/register").post(
@@ -21,7 +21,6 @@ router.route("/register").post(
   ]),
   registerUser
 );
-
 router.route("/login").post(loginUser);
 
 // secured routes
