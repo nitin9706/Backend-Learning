@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/users.model.js";
-import { uploadOnCloudnary } from "../utils/Cloudnary.js";
+import { DeleteCloudnaryFile, uploadOnCloudnary } from "../utils/Cloudnary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -70,8 +70,14 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const user = await User.create({
     fullname,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
+    avatar: {
+      url: avatar.url,
+      public_id: avatar.public_id,
+    },
+    coverImage: {
+      url: coverImage.url || "",
+      public_id: coverImage.public_id,
+    },
     email,
     password,
     username: username.toLowerCase(),
@@ -236,7 +242,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, "all field are required");
   }
 
-  const user = User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
       $set: {
@@ -256,22 +262,30 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
   if (!coverImageLocalPath) {
     throw new ApiError(400, "coverImage file is missing ");
   }
-  const coverImage = await uploadOnCloudnary(avatarLocalPath);
-  if (!coverImage.url) {
+
+  const user = await User.findById(req.user?._id).select(
+    "-password -refreshToken"
+  );
+  if (!user) {
+    throw new ApiError(400, "there is issue while getting the user ");
+  }
+
+  const oldCoverImagePublicId = user.coverImage?.public_id;
+
+  const coverImage = await uploadOnCloudnary(coverImageLocalPath);
+  if (!coverImage) {
     throw new ApiError(400, "coverImage is not uploaded ");
   }
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        coverImage: coverImage.url,
-      },
-    },
-    { new: true }
-  ).select("-password");
+  user.coverImage = {
+    coverImage: coverImage?.url,
+  };
+  await user.save({ validateBeforeSave: false });
+
+  await DeleteCloudnaryFile(oldCoverImagePublicId);
+
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "coverImage changes successfully"));
+    .json(new ApiResponse(200, user, "coverImage changed successfully"));
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {

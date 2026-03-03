@@ -25,11 +25,11 @@ const userSchema = new Schema(
       index: true,
     },
     avatar: {
-      type: String, // url of images
+      type: Object, // url of images
       required: true,
     },
     coverImage: {
-      type: String, // url of images
+      type: Object, // url of images
     },
     watchHistory: [
       {

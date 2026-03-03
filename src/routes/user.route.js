@@ -4,6 +4,7 @@ import {
   logoutUser,
   refreshAccessToken,
   registerUser,
+  updateUserCoverImage,
 } from "../controllers/user.controller.js";
 import { upload } from "../Middlewares/Multer.middleware.js";
 import { verifyJWT } from "../Middlewares/auth.middleware.js";
@@ -25,4 +26,7 @@ router.route("/register").post(
 router.route("/login").post(upload.none(), loginUser);
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);
+router
+  .route("/updateCoverImage")
+  .post(upload.single("coverImage"), verifyJWT, updateUserCoverImage);
 export default router;

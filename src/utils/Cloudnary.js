@@ -6,9 +6,9 @@ dotenv.config({
 });
 // Configuration
 cloudinary.config({
-  cloud_name: process.env.CLOUDNARY_CLOUD_NAME,
-  api_key: process.env.CLOUDNARY_API_KEY,
-  api_secret: process.env.CLOUDNARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const uploadOnCloudnary = async (localfilepath) => {
@@ -27,5 +27,9 @@ const uploadOnCloudnary = async (localfilepath) => {
     return console.log(`there is some error with ${error}`);
   }
 };
+const DeleteCloudnaryFile = async (public_id) => {
+  const response = await cloudinary.uploader.destroy(public_id);
+  return response;
+};
 
-export { uploadOnCloudnary };
+export { uploadOnCloudnary, DeleteCloudnaryFile };
