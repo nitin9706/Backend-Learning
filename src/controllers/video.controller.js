@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { uploadOnCloudnary } from "../utils/Cloudnary.js";
+import { DeleteCloudnaryFile, uploadOnCloudnary } from "../utils/Cloudnary.js";
 import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
@@ -152,4 +152,66 @@ const videoUploader = asyncHandler(async (req, res) => {
     );
 });
 
-export { videoUploader, getAllVideos };
+const getVideoById = asyncHandler(async (req, res) => {
+  const videoId = req.params.id;
+  if (!videoId) {
+    throw new ApiError(404, "give the video id");
+  }
+
+  const video = await Video.findById(videoId);
+
+  res.status(200).json(new ApiResponse(200, video, "Video got successfully"));
+});
+
+const updateVideo = asyncHandler(async (req, res) => {
+  const videoId = req.params.id;
+  if (!videoId) {
+    throw new ApiError(404, "give the video id to upadte the video");
+  }
+
+  const { title, description } = req.body;
+
+  const video = await Video.findById(videoId);
+
+  // changing the title of the video
+
+  if (title) {
+    video.title = {
+      title: title,
+    };
+    await video.save({ validateBeforeSave: false });
+  }
+  // changing the description of the video
+  if (description) {
+    video.description = {
+      description: description,
+    };
+    await video.save({ validateBeforeSave: false });
+  }
+
+  const thumbnailLocalPath = req.file?.path;
+  // if there is a new thumbnail then it chnages
+  if (thumbnailLocalPath) {
+    const oldThumbnailLink = video.thumbnail;
+
+    const newThumbnail = await uploadOnCloudnary(thumbnailLocalPath);
+
+    if (!newThumbnail) {
+      throw new ApiError(400, "coverImage is not uploaded ");
+    }
+
+    // if there is new thumnail them it changes it in dbs
+
+    video.thumbnail = {
+      thumbnail: newThumbnail.url,
+    };
+
+    await video.save({ validateBeforeSave: false });
+
+    await DeleteCloudnaryFile(oldThumbnailLink);
+  }
+
+  res.status(200, {}, "all changes have been done");
+});
+
+export { videoUploader, getAllVideos, getVideoById, updateVideo };
