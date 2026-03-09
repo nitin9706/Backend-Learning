@@ -3,6 +3,93 @@ import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudnary } from "../utils/Cloudnary.js";
 import { Video } from "../models/video.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
+// getting all videos
+const getAllVideos = asyncHandler(async (req, res) => {
+  // Implementation for getting all videos
+  const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+
+  if (page < 1 || limit < 1) {
+    throw new ApiError(404, "page and limit should be positive");
+  }
+
+  const pipeline = [];
+  // only give the videos that are published
+  const defaultVideo = { isPublished: true };
+  // videos gotten from the query data
+  if (!query) {
+    throw new ApiError(404, "query is required");
+  } else {
+    defaultVideo.$or = [
+      { title: { $regex: query, $options: "i" } },
+      {
+        description: { $regex: query, $options: "i" },
+      },
+    ];
+  }
+
+  if (userId) {
+    if (!mongoose.isValidObjectId(userId)) {
+      throw new ApiError(400, "Invalid User 1");
+    }
+    defaultVideo.owner = new mongoose.Types.ObjectId(userId);
+    defaultVideo.isPublished = false;
+  }
+
+  // pushing the element to the pipeline array
+  pipeline.push({
+    $match: defaultVideo,
+  });
+
+  // if sorting is used then
+  const sortField = {};
+  if (sortBy) {
+    sortField[sortBy] = sortType === "asc" ? 1 : -1;
+  } else {
+    sortField["createdAt"] = sortType === "asc" ? 1 : -1;
+  }
+  pipeline.push({
+    $sort: sortField,
+  });
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline: [
+          {
+            $project: {
+              avatar: 1,
+              username: 1,
+            },
+          },
+        ],
+      },
+    },
+    { $addFields: { owner: { $first: "$owner" } } }
+  );
+
+  const options = {
+    page: parseInt(page),
+    limit: parseInt(limit),
+  };
+
+  const paginatedVideos = await Video.aggregatePaginate(
+    Video.aggregate(pipeline, options)
+  );
+
+  if (!paginatedVideos) {
+    throw new ApiResponse(500, "Couldn't fetch videos, Please try again.");
+  }
+  res
+    .status(200)
+    .json(new ApiResponse(200, paginatedVideos, "video got successfully"));
+});
+
+// video uploader controller
 const videoUploader = asyncHandler(async (req, res) => {
   //  to upload a video
   // need to check that the user is loggedIn or not
@@ -64,4 +151,5 @@ const videoUploader = asyncHandler(async (req, res) => {
       new ApiResponse(201, videoUploaded, "Video is uploaded success fully")
     );
 });
-export { videoUploader };
+
+export { videoUploader, getAllVideos };

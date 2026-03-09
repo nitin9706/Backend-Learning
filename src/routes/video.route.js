@@ -1,4 +1,7 @@
-import { videoUploader } from "../controllers/video.controller.js";
+import {
+  getAllVideos,
+  videoUploader,
+} from "../controllers/video.controller.js";
 import { verifyJWT } from "../Middlewares/auth.middleware.js";
 import { Router } from "express";
 import { upload } from "../Middlewares/Multer.middleware.js";
@@ -12,4 +15,5 @@ router.route("/upload").post(
   ]),
   videoUploader
 );
+router.route("/search").get(getAllVideos);
 export default router;
