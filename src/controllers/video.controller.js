@@ -172,21 +172,17 @@ const updateVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
 
   const video = await Video.findById(videoId);
-
+  if (!video) {
+    throw new ApiError(404, "no video exist");
+  }
   // changing the title of the video
 
   if (title) {
-    video.title = {
-      title: title,
-    };
-    await video.save({ validateBeforeSave: false });
+    video.title = title;
   }
   // changing the description of the video
   if (description) {
-    video.description = {
-      description: description,
-    };
-    await video.save({ validateBeforeSave: false });
+    video.description = description;
   }
 
   const thumbnailLocalPath = req.file?.path;
@@ -202,16 +198,52 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     // if there is new thumnail them it changes it in dbs
 
-    video.thumbnail = {
-      thumbnail: newThumbnail.url,
-    };
-
-    await video.save({ validateBeforeSave: false });
+    video.thumbnail = newThumbnail.url;
 
     await DeleteCloudnaryFile(oldThumbnailLink);
   }
+  await video.save({ validateBeforeSave: false });
 
-  res.status(200, {}, "all changes have been done");
+  res
+    .status(200)
+    .json(new ApiResponse(200, video, "all changes have done successfully"));
+});
+const deleteVideo = asyncHandler(async (req, res) => {
+  const videoId = req.params.id;
+  if (!videoId) {
+    throw new ApiError(404, "give the video id to upadte the video");
+  }
+
+  //TODO: delete video
+
+  const video = await Video.findByIdAndDelete(videoId);
+  res.status(200).json(200, {}, "video has been deleted");
 });
 
-export { videoUploader, getAllVideos, getVideoById, updateVideo };
+const togglePublishStatus = asyncHandler(async (req, res) => {
+  const videoId = req.params.id;
+  if (!videoId) {
+    throw new ApiError(404, "give the video id to upadte the video");
+  }
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "video not found");
+  }
+
+  const lastPublishedStatus = video.isPublished;
+
+  const newPublishedStatus = !lastPublishedStatus;
+
+  video.isPublished = newPublishedStatus;
+  await video.save({ validateBeforeSave: true });
+  res.status(200).json(new ApiResponse(200, video, "published status changed"));
+});
+
+export {
+  videoUploader,
+  getAllVideos,
+  getVideoById,
+  updateVideo,
+  deleteVideo,
+  togglePublishStatus,
+};

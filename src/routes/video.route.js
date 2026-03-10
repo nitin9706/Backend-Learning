@@ -1,6 +1,8 @@
 import {
+  deleteVideo,
   getAllVideos,
   getVideoById,
+  togglePublishStatus,
   updateVideo,
   videoUploader,
 } from "../controllers/video.controller.js";
@@ -19,13 +21,13 @@ router.route("/upload").post(
 );
 router.route("/search").get(getAllVideos);
 router.route("/videos/:id").get(getVideoById);
-router.route("/videos/update/:id").post(
-  upload.single(
-    {
-      name: "thumbnail",
-      maxCount: 1,
-    },
-    updateVideo
-  )
+router.route("/update/:id").patch(
+  upload.single({
+    name: "thumbnail",
+    maxCount: 1,
+  }),
+  updateVideo
 );
+router.route("/delete/:id").post(deleteVideo);
+router.route("/toggle/:id").post(togglePublishStatus);
 export default router;
