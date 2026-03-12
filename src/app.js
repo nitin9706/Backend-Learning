@@ -19,11 +19,14 @@ app.use(express.json({ limit: "16kb" }));
 import userRouter from "./routes/user.route.js";
 import videoRouter from "./routes/video.route.js";
 import commentRouter from "./routes/comment.route.js";
+import playlistRouter from "./routes/playlist.route.js";
 //  declare route
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/video", videoRouter);
 app.use("/api/v1/comment", commentRouter);
+app.use("/api/v1/playlist", playlistRouter);
+
 // http://localhost:8000/api/v1/users
 
 export { app };

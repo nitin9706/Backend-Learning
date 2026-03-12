@@ -3,7 +3,6 @@ import { Comment } from "../models/comment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { Video } from "../models/video.model.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
@@ -17,17 +16,11 @@ const getVideoComments = asyncHandler(async (req, res) => {
   if (!mongoose.isValidObjectId(videoId)) {
     throw new ApiError(404, "video not exist");
   }
-  const commentCount = await Comment.aggregate([
-    {
-      $match: {
-        video: videoId,
-      },
-    },
-  ]);
+  const commentFound = await Comment.find({ video: videoId });
   res
     .status(200)
     .json(
-      new ApiResponse(200, commentCount, "all comment fetched successfully")
+      new ApiResponse(200, commentFound, "all comment fetched successfully")
     );
 });
 
