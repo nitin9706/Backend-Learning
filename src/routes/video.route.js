@@ -11,7 +11,7 @@ import { Router } from "express";
 import { upload } from "../Middlewares/Multer.middleware.js";
 
 const router = Router();
-
+router.use(verifyJWT);
 router.route("/upload").post(
   upload.fields([
     { name: "video", maxCount: 1 },
