@@ -159,7 +159,8 @@ const getVideoById = asyncHandler(async (req, res) => {
   }
 
   const video = await Video.findById(videoId);
-
+  video.number = number++;
+  await video.save({ validateBeforeSave: false });
   res.status(200).json(new ApiResponse(200, video, "Video got successfully"));
 });
 
