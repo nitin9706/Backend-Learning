@@ -38,19 +38,6 @@ const addComment = asyncHandler(async (req, res) => {
   if (!commentGiven) {
     throw new ApiError(404, "please enter a comment");
   }
-  // const video = await Comment.aggregate([
-  //   {
-  //     $lookup: {
-  //       from: "videos",
-  //       localField: "video",
-  //       foreignField: "_id",
-  //       as: "videoMatched",
-  //     },
-  //   },
-  //   {
-  //     $unwind: "$videoMatched",
-  //   },
-  // ]);
 
   const owner = req.user._id;
 
